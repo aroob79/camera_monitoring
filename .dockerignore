@@ -1,0 +1,42 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv/
+venv/
+env/
+
+# Packaging
+build/
+dist/
+pip-wheel-metadata/
+
+# SQLite DBs and local data
+cctv_monitor.db
+*.db
+*.sqlite
+*.sqlite3
+recordings/
+
+# Logs
+*.log
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test and coverage
+.pytest_cache/
+.coverage
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Git metadata
+.git

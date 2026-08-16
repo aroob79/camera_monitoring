@@ -1,0 +1,52 @@
+services:
+
+  # Writer: polls every RTSP channel in config.py on a loop and fills the DB.
+  monitor:
+    build: .
+    container_name: swapno-feedwatch-monitor
+    image: swapno-feedwatch-monitor:latest
+    command: python3 monitor.py
+    restart: unless-stopped
+    volumes:
+      - cctv-data:/app/data
+      # Bind-mount config.py so you can edit channels/thresholds without
+      # rebuilding the image -- just `docker compose restart monitor`.
+      - ./config.py:/app/config.py:ro
+    environment:
+      - DB_PATH=/app/data/cctv_monitor.db
+    # Most setups reach LAN cameras fine over the default bridge network.
+    # If your NVR/cameras aren't reachable from inside the container
+    # (common with multicast discovery or unusual VLAN setups), switch to:
+    #   network_mode: host
+    # (Linux only; drops the "ports:" section on the dashboard service below
+    # since host networking exposes it directly on the host's own port 8501.)
+
+  # Reader: serves the dashboard, reads the same DB the monitor writes to.
+  dashboard:
+    build: .
+    container_name: swapno-feedwatch-dashboard
+    image: swapno-feedwatch-dashboard:latest
+    command: streamlit run app.py --server.address 0.0.0.0 --server.port 8707 --server.headless true
+    restart: unless-stopped
+    depends_on:
+      - monitor
+    ports:
+      - "8707:8707"
+    volumes:
+      - cctv-data:/app/data
+      - ./config.py:/app/config.py:ro
+    environment:
+      - DB_PATH=/app/data/cctv_monitor.db
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8707/_stcore/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  cctv-data:
+    # Named volume holding cctv_monitor.db (+ its -wal/-shm files) so data
+    # survives container restarts/rebuilds. To back it up:
+    #   docker run --rm -v cctv-monitor_cctv-data:/data -v $(pwd):/backup \
+    #     alpine cp /data/cctv_monitor.db /backup/
