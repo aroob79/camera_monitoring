@@ -19,10 +19,21 @@ from datetime import timezone, timedelta
 
 
 
-# Load .env file — looks for it next to this file (backend/.env)
-load_dotenv(Path(__file__).parent / ".env")
-RTSP_SOURCES: dict = ast.literal_eval(os.getenv("rtsp"))
+# # Load .env file — looks for it next to this file (backend/.env)
+# load_dotenv(Path(__file__).parent / ".env")
+# print(f"Loaded .env file from {Path(__file__).parent / '.env'} , os.getenv('rtsp') = {os.getenv('rtsp')}")
+# RTSP_SOURCES: dict = ast.literal_eval(os.getenv("rtsp"))
 
+
+rtsp_env = os.getenv("rtsp")
+
+if not rtsp_env:
+    raise RuntimeError(
+        "Environment variable 'rtsp' is missing. "
+        "Did you forget to configure env_file: .env in docker-compose.yml?"
+    )
+
+RTSP_SOURCES = ast.literal_eval(rtsp_env)
 
 CHANNELS = []
 for channel_id, source in RTSP_SOURCES.items():
@@ -46,7 +57,7 @@ BRIGHTNESS_THRESHOLD = 20.0
 STD_DEV_THRESHOLD = 20
 
 # --- Polling ------------------------------------------------------------------
-POLL_INTERVAL_SEC = int(60 * 5)         # how often to sample each RTSP channel
+POLL_INTERVAL_SEC = int(60 * 5 *2)         # how often to sample each RTSP channel
 RTSP_OPEN_TIMEOUT_MS = 5000     # give up connecting after this long -> no_signal
 RTSP_READ_RETRIES = 2           # retries before declaring no_signal
 

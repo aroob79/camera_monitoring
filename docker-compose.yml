@@ -7,6 +7,8 @@ services:
     image: swapno-feedwatch-monitor:latest
     command: python3 monitor.py
     restart: unless-stopped
+    env_file:
+      - .env
     volumes:
       - cctv-data:/app/data
       # Bind-mount config.py so you can edit channels/thresholds without
@@ -28,6 +30,8 @@ services:
     image: swapno-feedwatch-dashboard:latest
     command: streamlit run app.py --server.address 0.0.0.0 --server.port 8707 --server.headless true
     restart: unless-stopped
+    env_file:
+      - .env
     depends_on:
       - monitor
     ports:
